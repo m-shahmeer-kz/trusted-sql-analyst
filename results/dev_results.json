@@ -1,0 +1,1151 @@
+{
+ "summary": {
+  "cases": 32,
+  "databases": {
+   "chinook": {
+    "tables": 11,
+    "profile_seconds": 0.05
+   },
+   "northwind": {
+    "tables": 30,
+    "profile_seconds": 3.57
+   },
+   "sakila": {
+    "tables": 21,
+    "profile_seconds": 0.31
+   }
+  },
+  "wrong_caught": 31,
+  "wrong_answers_differ": 32,
+  "right_false_alarms": 0,
+  "right_pass": 32,
+  "check_seconds_median": 0.005,
+  "check_seconds_max": 0.42,
+  "tool": "sqlanalyst 1.1.0"
+ },
+ "cases": [
+  {
+   "id": "C01",
+   "db": "chinook",
+   "question": "Revenue by genre",
+   "expected": [
+    "TSQ105"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ105:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     "Rock",
+     7720.0199999999995
+    ],
+    [
+     "Latin",
+     3472.5499999999997
+    ],
+    [
+     "Metal",
+     2093.13
+    ]
+   ],
+   "right_preview": [
+    [
+     "Rock",
+     826.65
+    ],
+    [
+     "Latin",
+     382.14
+    ],
+    [
+     "Metal",
+     261.36
+    ]
+   ]
+  },
+  {
+   "id": "C02",
+   "db": "chinook",
+   "question": "Number of invoices per customer country",
+   "expected": [
+    "TSQ105"
+   ],
+   "wrong_verdict": "REVIEW",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ105:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     "USA",
+     494
+    ],
+    [
+     "Canada",
+     304
+    ],
+    [
+     "Brazil",
+     190
+    ]
+   ],
+   "right_preview": [
+    [
+     "USA",
+     91
+    ],
+    [
+     "Canada",
+     56
+    ],
+    [
+     "Brazil",
+     35
+    ]
+   ]
+  },
+  {
+   "id": "C03",
+   "db": "chinook",
+   "question": "How many customers are in the USA?",
+   "expected": [
+    "TSQ112"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ112:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     13
+    ]
+   ]
+  },
+  {
+   "id": "C04",
+   "db": "chinook",
+   "question": "Customers living in a state where no invoice over $15 was billed",
+   "expected": [
+    "TSQ101"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ101:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     55
+    ]
+   ]
+  },
+  {
+   "id": "C05",
+   "db": "chinook",
+   "question": "Share of customers that are businesses (have a company)",
+   "expected": [
+    "TSQ103"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ103:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     0.1694915254237288
+    ]
+   ]
+  },
+  {
+   "id": "C06",
+   "db": "chinook",
+   "question": "How many invoices were issued on 2013-12-22?",
+   "expected": [
+    "TSQ108"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ108:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     1
+    ]
+   ]
+  },
+  {
+   "id": "C07",
+   "db": "chinook",
+   "question": "Revenue in July 2012",
+   "expected": [
+    "TSQ108"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ108:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     28.71
+    ]
+   ],
+   "right_preview": [
+    [
+     39.62
+    ]
+   ]
+  },
+  {
+   "id": "C08",
+   "db": "chinook",
+   "question": "How many customers have no state?",
+   "expected": [
+    "TSQ102"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ102:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     29
+    ]
+   ]
+  },
+  {
+   "id": "C09",
+   "db": "chinook",
+   "question": "Top 5 best-selling tracks by revenue",
+   "expected": [
+    "TSQ104"
+   ],
+   "wrong_verdict": "REVIEW",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ104:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     "For Those About To Rock (We Salute You)",
+     0.99
+    ],
+    [
+     "Balls to the Wall",
+     1.98
+    ],
+    [
+     "Fast As a Shark",
+     0.99
+    ]
+   ],
+   "right_preview": [
+    [
+     "The Woman King",
+     3.98
+    ],
+    [
+     "The Fix",
+     3.98
+    ],
+    [
+     "Walkabout",
+     3.98
+    ]
+   ]
+  },
+  {
+   "id": "C10",
+   "db": "chinook",
+   "question": "Number of albums per artist, including artists with none",
+   "expected": [
+    "TSQ106"
+   ],
+   "wrong_verdict": "REVIEW",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ105:medium",
+    "TSQ106:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     1,
+     "AC/DC",
+     2
+    ],
+    [
+     2,
+     "Accept",
+     2
+    ],
+    [
+     3,
+     "Aerosmith",
+     1
+    ]
+   ],
+   "right_preview": [
+    [
+     1,
+     "AC/DC",
+     2
+    ],
+    [
+     2,
+     "Accept",
+     2
+    ],
+    [
+     3,
+     "Aerosmith",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "C11",
+   "db": "chinook",
+   "question": "For every artist, how many albums have a title starting with 'The' (0 if none)",
+   "expected": [
+    "TSQ107"
+   ],
+   "wrong_verdict": "REVIEW",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ107:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     10,
+     1
+    ],
+    [
+     15,
+     1
+    ],
+    [
+     22,
+     2
+    ]
+   ],
+   "right_preview": [
+    [
+     1,
+     0
+    ],
+    [
+     2,
+     0
+    ],
+    [
+     3,
+     0
+    ]
+   ]
+  },
+  {
+   "id": "C12",
+   "db": "chinook",
+   "question": "Customers per country and their support rep",
+   "expected": [
+    "TSQ110"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ110:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     "Argentina",
+     4,
+     1
+    ],
+    [
+     "Australia",
+     4,
+     1
+    ],
+    [
+     "Austria",
+     5,
+     1
+    ]
+   ],
+   "right_preview": [
+    [
+     "Argentina",
+     4,
+     1
+    ],
+    [
+     "Australia",
+     4,
+     1
+    ],
+    [
+     "Austria",
+     5,
+     1
+    ]
+   ]
+  },
+  {
+   "id": "C13",
+   "db": "chinook",
+   "question": "Average invoice total",
+   "expected": [
+    "TSQ111"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ105:high",
+    "TSQ111:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     5.651941747572815
+    ]
+   ],
+   "right_preview": [
+    [
+     5.747912087912088
+    ]
+   ]
+  },
+  {
+   "id": "C14",
+   "db": "chinook",
+   "question": "List all 8 employees with their manager's name",
+   "expected": [
+    "TSQ114"
+   ],
+   "wrong_verdict": "PASS",
+   "wrong_caught": false,
+   "wrong_rules": [
+    "TSQ114:low"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     "Nancy Edwards",
+     "Andrew Adams"
+    ],
+    [
+     "Jane Peacock",
+     "Nancy Edwards"
+    ],
+    [
+     "Margaret Park",
+     "Nancy Edwards"
+    ]
+   ],
+   "right_preview": [
+    [
+     "Andrew Adams",
+     "(none)"
+    ],
+    [
+     "Nancy Edwards",
+     "Andrew Adams"
+    ],
+    [
+     "Jane Peacock",
+     "Nancy Edwards"
+    ]
+   ]
+  },
+  {
+   "id": "C15",
+   "db": "chinook",
+   "question": "How many customers are in Brazil?",
+   "expected": [
+    "TSQ113"
+   ],
+   "wrong_verdict": "REVIEW",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ113:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     5
+    ]
+   ]
+  },
+  {
+   "id": "N01",
+   "db": "northwind",
+   "question": "Total freight by ship country",
+   "expected": [
+    "TSQ105"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ105:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     "USA",
+     29234066.5
+    ],
+    [
+     "Germany",
+     27210514.75
+    ],
+    [
+     "France",
+     22442095.25
+    ]
+   ],
+   "right_preview": [
+    [
+     "USA",
+     573251.0
+    ],
+    [
+     "Germany",
+     537189.75
+    ],
+    [
+     "France",
+     442055.75
+    ]
+   ]
+  },
+  {
+   "id": "N02",
+   "db": "northwind",
+   "question": "Number of orders per employee",
+   "expected": [
+    "TSQ105"
+   ],
+   "wrong_verdict": "REVIEW",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ105:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     "Davolio",
+     67619
+    ],
+    [
+     "Fuller",
+     66365
+    ],
+    [
+     "Leverling",
+     68246
+    ]
+   ],
+   "right_preview": [
+    [
+     "Davolio",
+     1846
+    ],
+    [
+     "Fuller",
+     1771
+    ],
+    [
+     "Leverling",
+     1846
+    ]
+   ]
+  },
+  {
+   "id": "N03",
+   "db": "northwind",
+   "question": "How many orders were placed on 2016-01-01?",
+   "expected": [
+    "TSQ108"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ108:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     4
+    ]
+   ]
+  },
+  {
+   "id": "N04",
+   "db": "northwind",
+   "question": "Freight on orders placed in 2016",
+   "expected": [
+    "TSQ108"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ108:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     365148.0
+    ]
+   ],
+   "right_preview": [
+    [
+     366441.75
+    ]
+   ]
+  },
+  {
+   "id": "N05",
+   "db": "northwind",
+   "question": "Share of order lines that got a discount",
+   "expected": [
+    "TSQ103"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ103:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     0.0013753871353705913
+    ]
+   ]
+  },
+  {
+   "id": "N06",
+   "db": "northwind",
+   "question": "How many orders have not shipped yet?",
+   "expected": [
+    "TSQ102"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ102:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     21
+    ]
+   ]
+  },
+  {
+   "id": "N07",
+   "db": "northwind",
+   "question": "How many products are in the Beverages category?",
+   "expected": [
+    "TSQ112"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ112:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     12
+    ]
+   ]
+  },
+  {
+   "id": "N08",
+   "db": "northwind",
+   "question": "How many orders shipped to the United Kingdom?",
+   "expected": [
+    "TSQ113"
+   ],
+   "wrong_verdict": "REVIEW",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ113:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     1280
+    ]
+   ]
+  },
+  {
+   "id": "N09",
+   "db": "northwind",
+   "question": "The 10 most recent orders",
+   "expected": [
+    "TSQ104"
+   ],
+   "wrong_verdict": "REVIEW",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ104:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     10248,
+     "2016-07-04"
+    ],
+    [
+     10249,
+     "2016-07-05"
+    ],
+    [
+     10250,
+     "2016-07-08"
+    ]
+   ],
+   "right_preview": [
+    [
+     13724,
+     "2023-10-28 00:09:48"
+    ],
+    [
+     25677,
+     "2023-10-27 18:17:38"
+    ],
+    [
+     13789,
+     "2023-10-27 06:38:44"
+    ]
+   ]
+  },
+  {
+   "id": "N10",
+   "db": "northwind",
+   "question": "Number of products per category with the category name",
+   "expected": [
+    "TSQ110"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ110:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     1,
+     "Beverages",
+     "Chai",
+     12
+    ],
+    [
+     2,
+     "Condiments",
+     "Aniseed Syrup",
+     12
+    ],
+    [
+     3,
+     "Confections",
+     "Pavlova",
+     13
+    ]
+   ],
+   "right_preview": [
+    [
+     1,
+     "Beverages",
+     12
+    ],
+    [
+     2,
+     "Condiments",
+     12
+    ],
+    [
+     3,
+     "Confections",
+     13
+    ]
+   ]
+  },
+  {
+   "id": "S01",
+   "db": "sakila",
+   "question": "Total replacement cost of the catalogue by film rating",
+   "expected": [
+    "TSQ105"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ105:high",
+    "TSQ114:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     "G",
+     19826.239999999998
+    ],
+    [
+     "NC-17",
+     22787.719999999998
+    ],
+    [
+     "PG",
+     21676.57
+    ]
+   ],
+   "right_preview": [
+    [
+     "G",
+     3582.22
+    ],
+    [
+     "NC-17",
+     4228.9
+    ],
+    [
+     "PG",
+     3678.06
+    ]
+   ]
+  },
+  {
+   "id": "S02",
+   "db": "sakila",
+   "question": "Payments received in July 2005",
+   "expected": [
+    "TSQ108"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ108:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     25505.68
+    ]
+   ],
+   "right_preview": [
+    [
+     28373.89
+    ]
+   ]
+  },
+  {
+   "id": "S03",
+   "db": "sakila",
+   "question": "How many rentals have not been returned?",
+   "expected": [
+    "TSQ102"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ102:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     183
+    ]
+   ]
+  },
+  {
+   "id": "S04",
+   "db": "sakila",
+   "question": "Number of rentals per film, including films never rented",
+   "expected": [
+    "TSQ106"
+   ],
+   "wrong_verdict": "REVIEW",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ105:medium",
+    "TSQ106:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     1,
+     24
+    ],
+    [
+     2,
+     7
+    ],
+    [
+     3,
+     12
+    ]
+   ],
+   "right_preview": [
+    [
+     1,
+     23
+    ],
+    [
+     2,
+     7
+    ],
+    [
+     3,
+     12
+    ]
+   ]
+  },
+  {
+   "id": "S05",
+   "db": "sakila",
+   "question": "Share of customers that are active",
+   "expected": [
+    "TSQ103"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ103:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     0.9749582637729549
+    ]
+   ]
+  },
+  {
+   "id": "S06",
+   "db": "sakila",
+   "question": "How many films are in the Sci-Fi category?",
+   "expected": [
+    "TSQ112"
+   ],
+   "wrong_verdict": "FAIL",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ112:high"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     0
+    ]
+   ],
+   "right_preview": [
+    [
+     61
+    ]
+   ]
+  },
+  {
+   "id": "S07",
+   "db": "sakila",
+   "question": "Total payments received (all payments)",
+   "expected": [
+    "TSQ114"
+   ],
+   "wrong_verdict": "REVIEW",
+   "wrong_caught": true,
+   "wrong_rules": [
+    "TSQ114:medium"
+   ],
+   "right_verdict": "PASS",
+   "right_false_alarm": false,
+   "right_rules": [],
+   "answers_differ": true,
+   "wrong_preview": [
+    [
+     67406.56
+    ]
+   ],
+   "right_preview": [
+    [
+     67416.51000000001
+    ]
+   ]
+  }
+ ]
+}

@@ -1,0 +1,564 @@
+[
+  {
+    "id": "B01",
+    "db": "chinook",
+    "q": "Which 3 music genres generated the most sales revenue (the amount customers paid for tracks of that genre)?",
+    "wrong": "SELECT g.Name AS genre, SUM(i.Total) AS revenue\nFROM Invoice i\nJOIN InvoiceLine il ON il.InvoiceId = i.InvoiceId\nJOIN Track t ON t.TrackId = il.TrackId\nJOIN Genre g ON g.GenreId = t.GenreId\nGROUP BY g.Name\nORDER BY revenue DESC\nLIMIT 3",
+    "right": "SELECT g.Name AS genre, SUM(il.UnitPrice * il.Quantity) AS revenue\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId = il.TrackId\nJOIN Genre g ON g.GenreId = t.GenreId\nGROUP BY g.Name\nORDER BY revenue DESC\nLIMIT 3",
+    "mistake": "Sums the invoice-level Total after joining to invoice lines, so each invoice total is counted once per line (join fan-out) and attributed to every genre on the invoice.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        "Rock",
+        7720.0199999999995
+      ],
+      [
+        "Latin",
+        3472.5499999999997
+      ],
+      [
+        "Metal",
+        2093.13
+      ]
+    ],
+    "right_result": [
+      [
+        "Rock",
+        826.65
+      ],
+      [
+        "Latin",
+        382.14
+      ],
+      [
+        "Metal",
+        261.36
+      ]
+    ]
+  },
+  {
+    "id": "B02",
+    "db": "chinook",
+    "q": "How many employees have nobody reporting to them (i.e. are not the manager of any other employee)?",
+    "wrong": "SELECT COUNT(*) AS employees_without_reports\nFROM Employee\nWHERE EmployeeId NOT IN (SELECT ReportsTo FROM Employee)",
+    "right": "SELECT COUNT(*) AS employees_without_reports\nFROM Employee\nWHERE EmployeeId NOT IN (SELECT ReportsTo FROM Employee WHERE ReportsTo IS NOT NULL)",
+    "mistake": "NOT IN against a subquery that contains a NULL (the General Manager's ReportsTo) is never true, so the count is 0.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        0
+      ]
+    ],
+    "right_result": [
+      [
+        5
+      ]
+    ]
+  },
+  {
+    "id": "B03",
+    "db": "chinook",
+    "q": "What percentage of tracks in the catalog are video tracks (media type 'Protected MPEG-4 video file')? Round to 2 decimals.",
+    "wrong": "SELECT ROUND(100 * SUM(CASE WHEN m.Name = 'Protected MPEG-4 video file' THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct_video\nFROM Track t\nJOIN MediaType m ON m.MediaTypeId = t.MediaTypeId",
+    "right": "SELECT ROUND(100.0 * SUM(CASE WHEN m.Name = 'Protected MPEG-4 video file' THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct_video\nFROM Track t\nJOIN MediaType m ON m.MediaTypeId = t.MediaTypeId",
+    "mistake": "All operands are integers, so the division truncates and the percentage loses its decimals (6.0 instead of 6.11).",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        6.0
+      ]
+    ],
+    "right_result": [
+      [
+        6.11
+      ]
+    ]
+  },
+  {
+    "id": "B04",
+    "db": "chinook",
+    "q": "On average, how many albums does an artist have, across all artists in the Artist table (artists with no albums count as 0)?",
+    "wrong": "SELECT AVG(album_count) AS avg_albums_per_artist\nFROM (\n  SELECT ar.ArtistId, COUNT(*) AS album_count\n  FROM Artist ar\n  LEFT JOIN Album al ON al.ArtistId = ar.ArtistId\n  GROUP BY ar.ArtistId\n)",
+    "right": "SELECT AVG(album_count) AS avg_albums_per_artist\nFROM (\n  SELECT ar.ArtistId, COUNT(al.AlbumId) AS album_count\n  FROM Artist ar\n  LEFT JOIN Album al ON al.ArtistId = ar.ArtistId\n  GROUP BY ar.ArtistId\n)",
+    "mistake": "COUNT(*) after a LEFT JOIN counts the NULL-padded row, so artists with no albums are counted as having 1 album.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        1.52
+      ]
+    ],
+    "right_result": [
+      [
+        1.2618181818181817
+      ]
+    ]
+  },
+  {
+    "id": "B05",
+    "db": "chinook",
+    "q": "How much revenue has the store earned from selling Jazz tracks?",
+    "wrong": "SELECT SUM(t.UnitPrice) AS jazz_revenue\nFROM Track t\nJOIN Genre g ON g.GenreId = t.GenreId\nWHERE g.Name = 'Jazz'",
+    "right": "SELECT SUM(il.UnitPrice * il.Quantity) AS jazz_revenue\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId = il.TrackId\nJOIN Genre g ON g.GenreId = t.GenreId\nWHERE g.Name = 'Jazz'",
+    "mistake": "Sums catalog list prices of all Jazz tracks (the value of the catalog) instead of what was actually sold on invoice lines.",
+    "category": "business-meaning",
+    "wrong_result": [
+      [
+        128.7
+      ]
+    ],
+    "right_result": [
+      [
+        79.2
+      ]
+    ]
+  },
+  {
+    "id": "B06",
+    "db": "chinook",
+    "q": "How many customers are not located in California (State = 'CA')? Include customers in countries where no state is recorded.",
+    "wrong": "SELECT COUNT(*) AS customers_outside_ca\nFROM Customer\nWHERE State <> 'CA'",
+    "right": "SELECT COUNT(*) AS customers_outside_ca\nFROM Customer\nWHERE State IS NULL OR State <> 'CA'",
+    "mistake": "State <> 'CA' evaluates to NULL for customers with no state, silently dropping 29 customers.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        27
+      ]
+    ],
+    "right_result": [
+      [
+        56
+      ]
+    ]
+  },
+  {
+    "id": "B07",
+    "db": "chinook",
+    "q": "What is the average lifetime amount a customer has spent at the store?",
+    "wrong": "SELECT ROUND(AVG(Total), 2) AS avg_spend_per_customer\nFROM Invoice",
+    "right": "SELECT ROUND(AVG(customer_total), 2) AS avg_spend_per_customer\nFROM (SELECT CustomerId, SUM(Total) AS customer_total\n      FROM Invoice\n      GROUP BY CustomerId)",
+    "mistake": "Averages individual invoice totals (average order value) rather than each customer's summed lifetime spend.",
+    "category": "business-meaning",
+    "wrong_result": [
+      [
+        5.65
+      ]
+    ],
+    "right_result": [
+      [
+        39.47
+      ]
+    ]
+  },
+  {
+    "id": "B08",
+    "db": "chinook",
+    "q": "What is the total invoiced revenue from the customers assigned to each sales support agent?",
+    "wrong": "SELECT e.FirstName || ' ' || e.LastName AS agent, SUM(i.Total) AS revenue\nFROM Employee e\nJOIN Customer c ON c.CustomerId = e.EmployeeId\nJOIN Invoice i ON i.CustomerId = c.CustomerId\nGROUP BY e.EmployeeId\nORDER BY revenue DESC",
+    "right": "SELECT e.FirstName || ' ' || e.LastName AS agent, SUM(i.Total) AS revenue\nFROM Employee e\nJOIN Customer c ON c.SupportRepId = e.EmployeeId\nJOIN Invoice i ON i.CustomerId = c.CustomerId\nGROUP BY e.EmployeeId\nORDER BY revenue DESC",
+    "mistake": "Joins Customer to Employee on CustomerId = EmployeeId instead of SupportRepId, pairing each employee with an unrelated customer.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        "Michael Mitchell",
+        49.62
+      ],
+      [
+        "Robert King",
+        42.62
+      ],
+      [
+        "Steve Johnson",
+        40.62
+      ]
+    ],
+    "right_result": [
+      [
+        "Jane Peacock",
+        833.04
+      ],
+      [
+        "Margaret Park",
+        775.4
+      ],
+      [
+        "Steve Johnson",
+        720.16
+      ]
+    ]
+  },
+  {
+    "id": "B09",
+    "db": "northwind",
+    "q": "How many orders were placed in calendar year 2021?",
+    "wrong": "SELECT COUNT(*) AS orders_2021\nFROM Orders\nWHERE OrderDate BETWEEN '2021-01-01' AND '2021-12-31'",
+    "right": "SELECT COUNT(*) AS orders_2021\nFROM Orders\nWHERE OrderDate >= '2021-01-01' AND OrderDate < '2022-01-01'",
+    "mistake": "OrderDate includes a time of day, so BETWEEN ... '2021-12-31' excludes orders placed later on December 31.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        1417
+      ]
+    ],
+    "right_result": [
+      [
+        1420
+      ]
+    ]
+  },
+  {
+    "id": "B10",
+    "db": "northwind",
+    "q": "What is the total net sales revenue (after discounts) from 'Raclette Courdavault' across all orders?",
+    "wrong": "SELECT ROUND(SUM(p.UnitPrice * od.Quantity * (1 - od.Discount)), 2) AS net_revenue\nFROM [Order Details] od\nJOIN Products p ON p.ProductID = od.ProductID\nWHERE p.ProductName = 'Raclette Courdavault'",
+    "right": "SELECT ROUND(SUM(od.UnitPrice * od.Quantity * (1 - od.Discount)), 2) AS net_revenue\nFROM [Order Details] od\nJOIN Products p ON p.ProductID = od.ProductID\nWHERE p.ProductName = 'Raclette Courdavault'",
+    "mistake": "Uses the product's current list price (Products.UnitPrice) instead of the price actually charged on each order line.",
+    "category": "business-meaning",
+    "wrong_result": [
+      [
+        11221938.75
+      ]
+    ],
+    "right_result": [
+      [
+        11216410.7
+      ]
+    ]
+  },
+  {
+    "id": "B11",
+    "db": "northwind",
+    "q": "How many orders shipped with Speedy Express or United Package had a freight charge above 500?",
+    "wrong": "SELECT COUNT(*) AS heavy_freight_orders\nFROM Orders o\nJOIN Shippers s ON s.ShipperID = o.ShipVia\nWHERE s.CompanyName = 'Speedy Express' OR s.CompanyName = 'United Package' AND o.Freight > 500",
+    "right": "SELECT COUNT(*) AS heavy_freight_orders\nFROM Orders o\nJOIN Shippers s ON s.ShipperID = o.ShipVia\nWHERE (s.CompanyName = 'Speedy Express' OR s.CompanyName = 'United Package') AND o.Freight > 500",
+    "mistake": "AND binds tighter than OR, so the freight filter only applies to United Package and every Speedy Express order is counted.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        5491
+      ]
+    ],
+    "right_result": [
+      [
+        296
+      ]
+    ]
+  },
+  {
+    "id": "B12",
+    "db": "northwind",
+    "q": "How many products come from suppliers based in Sweden?",
+    "wrong": "SELECT COUNT(*) AS swedish_products\nFROM Products p\nJOIN Suppliers s ON s.SupplierID = p.SupplierID\nWHERE s.Country = 'Sweden'",
+    "right": "SELECT COUNT(*) AS swedish_products\nFROM Products p\nJOIN Suppliers s ON s.SupplierID = p.SupplierID\nWHERE TRIM(s.Country) = 'Sweden'",
+    "mistake": "Exact string match misses a supplier whose Country is stored as 'Sweden ' with a trailing space.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        3
+      ]
+    ],
+    "right_result": [
+      [
+        5
+      ]
+    ]
+  },
+  {
+    "id": "B13",
+    "db": "northwind",
+    "q": "Which 3 countries have the most orders, based on the country where the ordering customer is located?",
+    "wrong": "SELECT ShipCountry AS country, COUNT(*) AS orders\nFROM Orders\nGROUP BY ShipCountry\nORDER BY orders DESC\nLIMIT 3",
+    "right": "SELECT c.Country AS country, COUNT(*) AS orders\nFROM Orders o\nJOIN Customers c ON c.CustomerID = o.CustomerID\nGROUP BY c.Country\nORDER BY orders DESC\nLIMIT 3",
+    "mistake": "Groups by the shipping destination country on the order rather than the customer's own country, which differ for most orders.",
+    "category": "business-meaning",
+    "wrong_result": [
+      [
+        "USA",
+        2328
+      ],
+      [
+        "Germany",
+        2193
+      ],
+      [
+        "France",
+        1778
+      ]
+    ],
+    "right_result": [
+      [
+        "USA",
+        2280
+      ],
+      [
+        "France",
+        1909
+      ],
+      [
+        "Germany",
+        1895
+      ]
+    ]
+  },
+  {
+    "id": "B14",
+    "db": "northwind",
+    "q": "For each manager, how many employees report directly to them?",
+    "wrong": "SELECT m.FirstName || ' ' || m.LastName AS manager, COUNT(*) AS direct_reports\nFROM Employees e\nJOIN Employees m ON e.EmployeeID = m.ReportsTo\nGROUP BY m.EmployeeID\nORDER BY direct_reports DESC",
+    "right": "SELECT e.FirstName || ' ' || e.LastName AS manager, COUNT(*) AS direct_reports\nFROM Employees e\nJOIN Employees m ON e.EmployeeID = m.ReportsTo\nGROUP BY e.EmployeeID\nORDER BY direct_reports DESC",
+    "mistake": "The self-join roles are swapped: it groups by the subordinate (m) instead of the manager (e), so every employee shows 1 report.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        "Nancy Davolio",
+        1
+      ],
+      [
+        "Janet Leverling",
+        1
+      ],
+      [
+        "Margaret Peacock",
+        1
+      ]
+    ],
+    "right_result": [
+      [
+        "Andrew Fuller",
+        5
+      ],
+      [
+        "Steven Buchanan",
+        3
+      ]
+    ]
+  },
+  {
+    "id": "B15",
+    "db": "northwind",
+    "q": "What was the total freight charged on orders placed in 2019 that contained at least one Beverages product?",
+    "wrong": "SELECT ROUND(SUM(o.Freight), 2) AS total_freight\nFROM Orders o\nJOIN [Order Details] od ON od.OrderID = o.OrderID\nJOIN Products p ON p.ProductID = od.ProductID\nJOIN Categories c ON c.CategoryID = p.CategoryID\nWHERE c.CategoryName = 'Beverages'\n  AND o.OrderDate >= '2019-01-01' AND o.OrderDate < '2020-01-01'",
+    "right": "SELECT ROUND(SUM(o.Freight), 2) AS total_freight\nFROM Orders o\nWHERE o.OrderDate >= '2019-01-01' AND o.OrderDate < '2020-01-01'\n  AND EXISTS (SELECT 1\n              FROM [Order Details] od\n              JOIN Products p ON p.ProductID = od.ProductID\n              JOIN Categories c ON c.CategoryID = p.CategoryID\n              WHERE od.OrderID = o.OrderID AND c.CategoryName = 'Beverages')",
+    "mistake": "Order-level Freight is summed once per matching beverage line, so orders with several beverage products have their freight counted multiple times.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        2713906.25
+      ]
+    ],
+    "right_result": [
+      [
+        339956.0
+      ]
+    ]
+  },
+  {
+    "id": "B16",
+    "db": "northwind",
+    "q": "How many active (not discontinued) products need to be reordered? A product needs reordering when the stock it will have, counting units already on order, is at or below its reorder level.",
+    "wrong": "SELECT COUNT(*) AS products_to_reorder\nFROM Products\nWHERE Discontinued = '0'\n  AND UnitsInStock <= ReorderLevel",
+    "right": "SELECT COUNT(*) AS products_to_reorder\nFROM Products\nWHERE Discontinued = '0'\n  AND UnitsInStock + UnitsOnOrder <= ReorderLevel",
+    "mistake": "Compares only units in stock to the reorder level and ignores units already on order, so products that are being replenished are flagged.",
+    "category": "business-meaning",
+    "wrong_result": [
+      [
+        18
+      ]
+    ],
+    "right_result": [
+      [
+        2
+      ]
+    ]
+  },
+  {
+    "id": "B17",
+    "db": "sakila",
+    "q": "Which actor has appeared in the most films, and in how many films?",
+    "wrong": "SELECT a.first_name || ' ' || a.last_name AS actor, COUNT(*) AS films\nFROM actor a\nJOIN film_actor fa ON fa.actor_id = a.actor_id\nGROUP BY a.first_name, a.last_name\nORDER BY films DESC\nLIMIT 1",
+    "right": "SELECT a.first_name || ' ' || a.last_name AS actor, COUNT(*) AS films\nFROM actor a\nJOIN film_actor fa ON fa.actor_id = a.actor_id\nGROUP BY a.actor_id\nORDER BY films DESC\nLIMIT 1",
+    "mistake": "Groups by actor name instead of actor_id, merging the two different actors named SUSAN DAVIS into one person with 54 films.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        "SUSAN DAVIS",
+        54
+      ]
+    ],
+    "right_result": [
+      [
+        "GINA DEGENERES",
+        42
+      ]
+    ]
+  },
+  {
+    "id": "B18",
+    "db": "sakila",
+    "q": "In February 2006, what was the average number of rentals per customer, across all customers (customers with no rentals that month count as 0)?",
+    "wrong": "SELECT ROUND(AVG(n), 3) AS avg_rentals_per_customer\nFROM (\n  SELECT c.customer_id, COUNT(r.rental_id) AS n\n  FROM customer c\n  LEFT JOIN rental r ON r.customer_id = c.customer_id\n  WHERE r.rental_date >= '2006-02-01' AND r.rental_date < '2006-03-01'\n  GROUP BY c.customer_id\n)",
+    "right": "SELECT ROUND(AVG(n), 3) AS avg_rentals_per_customer\nFROM (\n  SELECT c.customer_id, COUNT(r.rental_id) AS n\n  FROM customer c\n  LEFT JOIN rental r ON r.customer_id = c.customer_id\n                    AND r.rental_date >= '2006-02-01' AND r.rental_date < '2006-03-01'\n  GROUP BY c.customer_id\n)",
+    "mistake": "Filtering the right-hand table in WHERE turns the LEFT JOIN into an inner join, so customers with zero rentals are dropped from the average.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        1.152
+      ]
+    ],
+    "right_result": [
+      [
+        0.304
+      ]
+    ]
+  },
+  {
+    "id": "B19",
+    "db": "sakila",
+    "q": "How many different films were rented at least once in July 2005?",
+    "wrong": "SELECT COUNT(i.film_id) AS films_rented\nFROM rental r\nJOIN inventory i ON i.inventory_id = r.inventory_id\nWHERE r.rental_date >= '2005-07-01' AND r.rental_date < '2005-08-01'",
+    "right": "SELECT COUNT(DISTINCT i.film_id) AS films_rented\nFROM rental r\nJOIN inventory i ON i.inventory_id = r.inventory_id\nWHERE r.rental_date >= '2005-07-01' AND r.rental_date < '2005-08-01'",
+    "mistake": "Counts rental rows instead of distinct films (missing DISTINCT), so a film rented many times is counted many times.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        6709
+      ]
+    ],
+    "right_result": [
+      [
+        958
+      ]
+    ]
+  },
+  {
+    "id": "B20",
+    "db": "sakila",
+    "q": "What is the average number of inventory copies per film, across all films in the catalog (films with no copies count as 0)?",
+    "wrong": "SELECT AVG(copies) AS avg_copies_per_film\nFROM (\n  SELECT f.film_id, COUNT(*) AS copies\n  FROM film f\n  LEFT JOIN inventory i ON i.film_id = f.film_id\n  GROUP BY f.film_id\n)",
+    "right": "SELECT AVG(copies) AS avg_copies_per_film\nFROM (\n  SELECT f.film_id, COUNT(i.inventory_id) AS copies\n  FROM film f\n  LEFT JOIN inventory i ON i.film_id = f.film_id\n  GROUP BY f.film_id\n)",
+    "mistake": "COUNT(*) on the LEFT JOIN counts the NULL row, so the 42 films with no inventory are counted as having one copy.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        4.623
+      ]
+    ],
+    "right_result": [
+      [
+        4.581
+      ]
+    ]
+  },
+  {
+    "id": "B21",
+    "db": "sakila",
+    "q": "What was the total amount of payments received in July 2005?",
+    "wrong": "SELECT ROUND(SUM(amount), 2) AS july_payments\nFROM payment\nWHERE payment_date BETWEEN '2005-07-01' AND '2005-07-31'",
+    "right": "SELECT ROUND(SUM(amount), 2) AS july_payments\nFROM payment\nWHERE payment_date >= '2005-07-01' AND payment_date < '2005-08-01'",
+    "mistake": "payment_date is a timestamp, so BETWEEN ... '2005-07-31' drops every payment made during July 31.",
+    "category": "sql-mechanics",
+    "wrong_result": [
+      [
+        25505.68
+      ]
+    ],
+    "right_result": [
+      [
+        28373.89
+      ]
+    ]
+  },
+  {
+    "id": "B22",
+    "db": "sakila",
+    "q": "What is the total payment revenue from rentals of inventory held at store 2?",
+    "wrong": "SELECT ROUND(SUM(p.amount), 2) AS store2_revenue\nFROM payment p\nJOIN staff s ON s.staff_id = p.staff_id\nWHERE s.store_id = 2",
+    "right": "SELECT ROUND(SUM(p.amount), 2) AS store2_revenue\nFROM payment p\nJOIN rental r ON r.rental_id = p.rental_id\nJOIN inventory i ON i.inventory_id = r.inventory_id\nWHERE i.store_id = 2",
+    "mistake": "Attributes payments to the store of the staff member who took the payment, not the store that owns the rented inventory.",
+    "category": "business-meaning",
+    "wrong_result": [
+      [
+        33927.04
+      ]
+    ],
+    "right_result": [
+      [
+        33726.77
+      ]
+    ]
+  },
+  {
+    "id": "B23",
+    "db": "sakila",
+    "q": "Which 3 film categories had the most rentals?",
+    "wrong": "SELECT c.name AS category, COUNT(*) AS rentals\nFROM category c\nJOIN film_category fc ON fc.category_id = c.category_id\nGROUP BY c.name\nORDER BY rentals DESC\nLIMIT 3",
+    "right": "SELECT c.name AS category, COUNT(*) AS rentals\nFROM rental r\nJOIN inventory i ON i.inventory_id = r.inventory_id\nJOIN film_category fc ON fc.film_id = i.film_id\nJOIN category c ON c.category_id = fc.category_id\nGROUP BY c.name\nORDER BY rentals DESC\nLIMIT 3",
+    "mistake": "Counts the films in each category (catalog size) instead of the number of rentals.",
+    "category": "business-meaning",
+    "wrong_result": [
+      [
+        "Sports",
+        74
+      ],
+      [
+        "Foreign",
+        73
+      ],
+      [
+        "Family",
+        69
+      ]
+    ],
+    "right_result": [
+      [
+        "Sports",
+        1179
+      ],
+      [
+        "Animation",
+        1166
+      ],
+      [
+        "Action",
+        1112
+      ]
+    ]
+  },
+  {
+    "id": "B24",
+    "db": "sakila",
+    "q": "Who are the top 3 customers by total amount paid?",
+    "wrong": "SELECT c.first_name || ' ' || c.last_name AS customer, COUNT(p.payment_id) AS total\nFROM customer c\nJOIN payment p ON p.customer_id = c.customer_id\nGROUP BY c.customer_id\nORDER BY total DESC\nLIMIT 3",
+    "right": "SELECT c.first_name || ' ' || c.last_name AS customer, ROUND(SUM(p.amount), 2) AS total\nFROM customer c\nJOIN payment p ON p.customer_id = c.customer_id\nGROUP BY c.customer_id\nORDER BY total DESC\nLIMIT 3",
+    "mistake": "Ranks customers by number of payments instead of the sum of amounts paid.",
+    "category": "business-meaning",
+    "wrong_result": [
+      [
+        "ELEANOR HUNT",
+        46
+      ],
+      [
+        "KARL SEAL",
+        45
+      ],
+      [
+        "CLARA SHAW",
+        42
+      ]
+    ],
+    "right_result": [
+      [
+        "KARL SEAL",
+        221.55
+      ],
+      [
+        "ELEANOR HUNT",
+        216.54
+      ],
+      [
+        "CLARA SHAW",
+        195.58
+      ]
+    ]
+  }
+]

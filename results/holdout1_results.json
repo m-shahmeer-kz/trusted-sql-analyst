@@ -1,0 +1,410 @@
+{
+ "summary": {
+  "cases": 24,
+  "wrong_flagged": 13,
+  "right_false_alarms": 1,
+  "tool": "sqlanalyst 1.1.0",
+  "genuine_catches": {
+   "all": "13/24"
+  },
+  "scoring": "genuine catch = the wrong query gets a medium/high finding that the correct query does not get"
+ },
+ "cases": [
+  {
+   "id": "H01",
+   "db": "chinook",
+   "q": "What are the top 5 music genres by revenue, where revenue = InvoiceLine.UnitPrice \u00d7 InvoiceLine.Quantity summed over all invoice lines of tracks in that genre? Return genre name and revenue rounded to 2 decimals.",
+   "mistake": "Sums the invoice-level Total once per invoice line, so each invoice's full total is counted repeatedly (join fan-out) instead of summing line amounts.",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ105:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "After the joins, each `Invoice` row appears 5.44 times on average (2,240 joined rows for 412 Invoice rows). SUM(i.total) therefore adds up the same `Invoice` rows several times."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H02",
+   "db": "chinook",
+   "q": "For each customer country (Customer.Country), how many distinct customers have at least one invoice? Show the top 5 countries by that number (ties broken by country name).",
+   "mistake": "Counts invoices (one row per invoice after the join) instead of distinct customers.",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ105:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "`customers` is COUNT(*), which counts Invoice rows (412) after the joins - not Customer rows (59)."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H03",
+   "db": "chinook",
+   "q": "How many tracks were NOT composed by Steve Harris? A track counts if its Composer field does not contain 'Steve Harris'; tracks with no composer recorded (NULL) also count as not composed by him.",
+   "mistake": "NOT LIKE on a NULL Composer evaluates to NULL, so all tracks with no composer are silently dropped.",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ121:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "`track.composer NOT LIKE '%Steve Harris%'` is never true when Track.Composer is NULL, so the 978 rows with no Composer are silently left out."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H04",
+   "db": "chinook",
+   "q": "What was the total invoiced amount (sum of Invoice.Total) for invoices dated in October 2011 (1 Oct through 31 Oct inclusive)?",
+   "mistake": "InvoiceDate is stored with a time part ('2011-10-31 00:00:00'), which sorts after '2011-10-31', so the BETWEEN upper bound excludes the invoice on 31 October.",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ108:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "Invoice.InvoiceDate includes a time of day, so `<= '2011-10-31'` (or BETWEEN \u2026 AND '2011-10-31') stops at midnight and drops 1 rows later on 2011-10-31."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H05",
+   "db": "chinook",
+   "q": "How many tracks belong to the genre named exactly 'Rock'?",
+   "mistake": "The wildcard LIKE also matches the separate genre 'Rock And Roll'.",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ122:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "`Name LIKE '%Rock%'` matches 2 different Name values: ['Rock', 'Rock And Roll']. If you meant one of them, this adds the others too."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H06",
+   "db": "chinook",
+   "q": "For every employee who has a manager, list the employee's full name and the full name of the manager they report to (Employee.ReportsTo). Order by employee id.",
+   "mistake": "The self-join condition is reversed, so it pairs each employee with their direct reports instead of their manager.",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [
+    "TSQ114:low"
+   ],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [
+    "TSQ114:low"
+   ],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H07",
+   "db": "chinook",
+   "q": "Which 3 genres have the fewest invoice lines sold? Include genres with zero sales, show the number of invoice lines, and break ties by genre name.",
+   "mistake": "COUNT(*) after a LEFT JOIN counts unmatched tracks as rows, so genres with no or few sales get inflated counts (zero-sale genres never show 0).",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ105:medium",
+    "TSQ106:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "COUNT(*) counts 3,759 joined rows, which is more than the rows of any single table (Genre: 25, Track: 3,503, InvoiceLine: 2,240); the joins create combinations (many-to-many).",
+    "COUNT(*) counts the row kept for groups with no match, so 'zero' shows as 1."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H08",
+   "db": "chinook",
+   "q": "What percentage of all tracks in the catalogue are of media type 'Protected MPEG-4 video file'? Give the percentage rounded to 2 decimal places.",
+   "mistake": "Integer division truncates the percentage to a whole number before rounding.",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ103:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "`SUM(CASE WHEN m.name = 'Protected MPEG-4 video file' THEN 1 ELSE 0 END) * 100 / COUNT(*)` divides two whole numbers; in sqlite the decimals are thrown away (e.g. 2/3 = 0), so ratios and percentages come out as 0 or rounded down."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H09",
+   "db": "northwind",
+   "q": "What was total net revenue for orders placed in 2017 (by OrderDate year), where net revenue = [Order Details].UnitPrice \u00d7 Quantity \u00d7 (1 \u2212 Discount)? Round to 2 decimals.",
+   "mistake": "Ignores the Discount column, so it reports gross rather than net revenue.",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H10",
+   "db": "northwind",
+   "q": "What is the total gross sales amount (price actually charged on the order line \u00d7 Quantity, no discount) of the product 'Raclette Courdavault' across all orders? Round to 2 decimals.",
+   "mistake": "Uses the current list price from Products instead of the historical price charged on each order line.",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H11",
+   "db": "northwind",
+   "q": "What is the total freight cost (Orders.Freight) for each shipper (Shippers.CompanyName)? Order by total freight descending.",
+   "mistake": "An unnecessary join to order lines repeats each order's freight once per line item, hugely inflating the totals.",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ105:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "After the joins, each `Orders` row appears 37.42 times on average (609,283 joined rows for 16,282 Orders rows). SUM(o.freight) therefore adds up the same `Orders` rows several times."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H12",
+   "db": "northwind",
+   "q": "How many orders were shipped (ShippedDate) in calendar year 2019, per shipper company? Order by shipper name.",
+   "mistake": "Filters on OrderDate instead of ShippedDate, so it counts orders placed in 2019 rather than shipped in 2019.",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H13",
+   "db": "northwind",
+   "q": "Which 5 countries have the most orders, where an order's country is the country of the customer who placed it (Customers.Country)? Show country and order count.",
+   "mistake": "Groups by the order's ShipCountry, which in this data often differs from the customer's own country.",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H14",
+   "db": "northwind",
+   "q": "What was the average order value for orders placed in 2021, where an order's value is the sum over its lines of UnitPrice \u00d7 Quantity \u00d7 (1 \u2212 Discount)? Round to 2 decimals.",
+   "mistake": "Averages individual order lines instead of first totalling each order, giving the average line value rather than the average order value.",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H15",
+   "db": "northwind",
+   "q": "For each product category, which single product has sold the largest total quantity (sum of [Order Details].Quantity), and what is that quantity? Return category name, product name and quantity, ordered by category name.",
+   "mistake": "Groups only by category, so the quantity is the whole category's total and the product name is an arbitrary bare column, not the top seller.",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ110:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "p.productname is selected but not in GROUP BY and not aggregated; SQLite/MySQL return a value from an arbitrary row of each group."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H16",
+   "db": "northwind",
+   "q": "How many orders were placed on 16 January 2017 (any time during that day)?",
+   "mistake": "Exact equality against a date string misses orders whose OrderDate is stored with a time component.",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ108:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "Orders.OrderDate includes a time of day, so `= '2017-01-16'` only matches rows stored at exactly midnight/without a time (2) and misses 10 of the 12 rows on that day."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H17",
+   "db": "sakila",
+   "q": "What is total payment revenue per store, where a payment is credited to the store that owns the rented copy (inventory.store_id via payment.rental_id \u2192 rental \u2192 inventory)? Order by store_id.",
+   "mistake": "Attributes payments to the customer's home store (customer.store_id) instead of the store that owns the rented inventory.",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "REVIEW",
+   "right_rules": [
+    "TSQ114:medium"
+   ],
+   "right_false_alarm": true,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H18",
+   "db": "sakila",
+   "q": "What is the average film length (minutes) per film category? Each film should count once. Show the top 5 categories by average length, rounded to 2 decimals.",
+   "mistake": "The film_list view has one row per film-actor pair, so films are weighted by their number of actors (and films without actors are dropped).",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H19",
+   "db": "sakila",
+   "q": "How many films include 'Deleted Scenes' among their special features?",
+   "mistake": "special_features is a comma-separated list, so exact equality only finds films whose sole feature is Deleted Scenes.",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ124:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "film.special_features holds comma-separated lists (e.g. 'Trailers,Commentaries,Behind the Scenes'); `= 'Deleted Scenes'` finds 61 rows where it is the only item, but 503 rows contain it."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H20",
+   "db": "sakila",
+   "q": "How many rentals were returned late? A rental is late if the time between rental_date and return_date is strictly greater than the film's rental_duration (in days, measured exactly including hours). Ignore rentals not yet returned.",
+   "mistake": "Truncating the elapsed days to an integer ignores partial days, so rentals returned a few hours past the due time are not counted as late.",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H21",
+   "db": "sakila",
+   "q": "Which 5 customers have rented the largest number of distinct films (different titles, not copies)? Show customer_id, name and the count, ties broken by customer_id.",
+   "mistake": "Counts distinct inventory copies instead of distinct films, so renting two copies of the same title counts twice.",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H22",
+   "db": "sakila",
+   "q": "What is the average total amount paid per customer (sum each customer's payments, then average across customers)? Round to 2 decimals.",
+   "mistake": "Averages individual payments instead of per-customer totals.",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "H23",
+   "db": "sakila",
+   "q": "Which 5 actors (individual people, identified by actor_id) appear in the most films? Show actor name and film count, ties broken by actor_id.",
+   "mistake": "Groups by name instead of actor_id, merging the two different actors both named SUSAN DAVIS into one inflated entry.",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ125:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "Grouping by first_name, last_name merges different `actor` records that share the same value: e.g. 2 different actor_id values are called 'SUSAN DAVIS'."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "H24",
+   "db": "sakila",
+   "q": "How many rentals were made from store 1's inventory of films rated 'G' or 'PG'?",
+   "mistake": "AND binds tighter than OR, so PG rentals from both stores are included.",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ123:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "`i.store_id = 1 AND f.rating = 'G' OR f.rating = 'PG'` mixes AND and OR without brackets. AND binds first, so this reads as (A AND B) OR C - the OR part ignores the other conditions."
+   ],
+   "genuine_catch": true
+  }
+ ]
+}

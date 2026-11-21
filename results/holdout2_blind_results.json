@@ -1,0 +1,449 @@
+{
+ "summary": {
+  "cases": 24,
+  "by_category": {
+   "sql-mechanics": "15/16",
+   "business-meaning": "0/8"
+  },
+  "wrong_flagged": 15,
+  "right_false_alarms": 2,
+  "tool": "sqlanalyst 1.1.0",
+  "genuine_catches": {
+   "sql-mechanics": "14/16",
+   "business-meaning": "0/8"
+  },
+  "scoring": "genuine catch = the wrong query gets a medium/high finding that the correct query does not get"
+ },
+ "cases": [
+  {
+   "id": "B01",
+   "db": "chinook",
+   "q": "Which 3 music genres generated the most sales revenue (the amount customers paid for tracks of that genre)?",
+   "mistake": "Sums the invoice-level Total after joining to invoice lines, so each invoice total is counted once per line (join fan-out) and attributed to every genre on the invoice.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ105:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "After the joins, each `Invoice` row appears 5.44 times on average (2,240 joined rows for 412 Invoice rows). SUM(i.total) therefore adds up the same `Invoice` rows several times."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B02",
+   "db": "chinook",
+   "q": "How many employees have nobody reporting to them (i.e. are not the manager of any other employee)?",
+   "mistake": "NOT IN against a subquery that contains a NULL (the General Manager's ReportsTo) is never true, so the count is 0.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ101:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [
+    "TSQ101:low"
+   ],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "The subquery in `NOT employee.employeeid IN (SELECT employee.reportsto AS reportsto FROM employee AS emplo\u2026` returns 1 NULL value(s). With even one NULL, NOT IN is never true, so this condition removes every row."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B03",
+   "db": "chinook",
+   "q": "What percentage of tracks in the catalog are video tracks (media type 'Protected MPEG-4 video file')? Round to 2 decimals.",
+   "mistake": "All operands are integers, so the division truncates and the percentage loses its decimals (6.0 instead of 6.11).",
+   "category": "sql-mechanics",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ103:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "`100 * SUM(CASE WHEN m.name = 'Protected MPEG-4 video file' THEN 1 ELSE 0 END) / COUNT(*)` divides two whole numbers; in sqlite the decimals are thrown away (e.g. 2/3 = 0), so ratios and percentages come out as 0 or rounded down."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B04",
+   "db": "chinook",
+   "q": "On average, how many albums does an artist have, across all artists in the Artist table (artists with no albums count as 0)?",
+   "mistake": "COUNT(*) after a LEFT JOIN counts the NULL-padded row, so artists with no albums are counted as having 1 album.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ105:medium",
+    "TSQ106:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "COUNT(*) counts 418 joined rows, which is more than the rows of any single table (Artist: 275, Album: 347); the joins create combinations (many-to-many).",
+    "COUNT(*) counts the row kept for groups with no match, so 'zero' shows as 1."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B05",
+   "db": "chinook",
+   "q": "How much revenue has the store earned from selling Jazz tracks?",
+   "mistake": "Sums catalog list prices of all Jazz tracks (the value of the catalog) instead of what was actually sold on invoice lines.",
+   "category": "business-meaning",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "B06",
+   "db": "chinook",
+   "q": "How many customers are not located in California (State = 'CA')? Include customers in countries where no state is recorded.",
+   "mistake": "State <> 'CA' evaluates to NULL for customers with no state, silently dropping 29 customers.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ121:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "`customer.state <> 'CA'` is never true when Customer.State is NULL, so the 29 rows with no State are silently left out."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B07",
+   "db": "chinook",
+   "q": "What is the average lifetime amount a customer has spent at the store?",
+   "mistake": "Averages individual invoice totals (average order value) rather than each customer's summed lifetime spend.",
+   "category": "business-meaning",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "B08",
+   "db": "chinook",
+   "q": "What is the total invoiced revenue from the customers assigned to each sales support agent?",
+   "mistake": "Joins Customer to Employee on CustomerId = EmployeeId instead of SupportRepId, pairing each employee with an unrelated customer.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "REVIEW",
+   "right_rules": [
+    "TSQ114:medium"
+   ],
+   "right_false_alarm": true,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "B09",
+   "db": "northwind",
+   "q": "How many orders were placed in calendar year 2021?",
+   "mistake": "OrderDate includes a time of day, so BETWEEN ... '2021-12-31' excludes orders placed later on December 31.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ108:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "Orders.OrderDate includes a time of day, so `<= '2021-12-31'` (or BETWEEN \u2026 AND '2021-12-31') stops at midnight and drops 3 rows later on 2021-12-31."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B10",
+   "db": "northwind",
+   "q": "What is the total net sales revenue (after discounts) from 'Raclette Courdavault' across all orders?",
+   "mistake": "Uses the product's current list price (Products.UnitPrice) instead of the price actually charged on each order line.",
+   "category": "business-meaning",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "B11",
+   "db": "northwind",
+   "q": "How many orders shipped with Speedy Express or United Package had a freight charge above 500?",
+   "mistake": "AND binds tighter than OR, so the freight filter only applies to United Package and every Speedy Express order is counted.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ123:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "`s.companyname = 'Speedy Express' OR s.companyname = 'United Package' AND o.freight > 500` mixes AND and OR without brackets. AND binds first, so this reads as (A AND B) OR C - the OR part ignores the other conditions."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B12",
+   "db": "northwind",
+   "q": "How many products come from suppliers based in Sweden?",
+   "mistake": "Exact string match misses a supplier whose Country is stored as 'Sweden ' with a trailing space.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ112:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "`Suppliers.Country = 'Sweden'` matches 1 rows, but 2 rows hold the same value written differently: ['Sweden ', 'Sweden']."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B13",
+   "db": "northwind",
+   "q": "Which 3 countries have the most orders, based on the country where the ordering customer is located?",
+   "mistake": "Groups by the shipping destination country on the order rather than the customer's own country, which differ for most orders.",
+   "category": "business-meaning",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "B14",
+   "db": "northwind",
+   "q": "For each manager, how many employees report directly to them?",
+   "mistake": "The self-join roles are swapped: it groups by the subordinate (m) instead of the manager (e), so every employee shows 1 report.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ114:medium"
+   ],
+   "caught": true,
+   "right_verdict": "REVIEW",
+   "right_rules": [
+    "TSQ114:medium"
+   ],
+   "right_false_alarm": true,
+   "wrong_detail": [
+    "The INNER JOIN(s) keep 2 of 9 `Employees` rows; 7 rows have no match (missing or NULL key) and silently disappear from the answer."
+   ],
+   "genuine_catch": false
+  },
+  {
+   "id": "B15",
+   "db": "northwind",
+   "q": "What was the total freight charged on orders placed in 2019 that contained at least one Beverages product?",
+   "mistake": "Order-level Freight is summed once per matching beverage line, so orders with several beverage products have their freight counted multiple times.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ105:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "After the joins, each `Orders` row appears 6.43 times on average (8,104 joined rows for 1,260 Orders rows). SUM(o.freight) therefore adds up the same `Orders` rows several times."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B16",
+   "db": "northwind",
+   "q": "How many active (not discontinued) products need to be reordered? A product needs reordering when the stock it will have, counting units already on order, is at or below its reorder level.",
+   "mistake": "Compares only units in stock to the reorder level and ignores units already on order, so products that are being replenished are flagged.",
+   "category": "business-meaning",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "B17",
+   "db": "sakila",
+   "q": "Which actor has appeared in the most films, and in how many films?",
+   "mistake": "Groups by actor name instead of actor_id, merging the two different actors named SUSAN DAVIS into one person with 54 films.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ125:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "Grouping by first_name, last_name merges different `actor` records that share the same value: e.g. 2 different actor_id values are called 'SUSAN DAVIS'."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B18",
+   "db": "sakila",
+   "q": "In February 2006, what was the average number of rentals per customer, across all customers (customers with no rentals that month count as 0)?",
+   "mistake": "Filtering the right-hand table in WHERE turns the LEFT JOIN into an inner join, so customers with zero rentals are dropped from the average.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ107:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "`r.rental_date >= '2006-02-01'` in WHERE removes the rows the LEFT JOIN kept for unmatched `r` (their columns are NULL), so it behaves like an INNER JOIN."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B19",
+   "db": "sakila",
+   "q": "How many different films were rented at least once in July 2005?",
+   "mistake": "Counts rental rows instead of distinct films (missing DISTINCT), so a film rented many times is counted many times.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ105:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "After the joins, each `inventory` row appears 1.58 times on average (6,709 joined rows for 4,253 inventory rows). COUNT(i.film_id) therefore adds up the same `inventory` rows several times."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B20",
+   "db": "sakila",
+   "q": "What is the average number of inventory copies per film, across all films in the catalog (films with no copies count as 0)?",
+   "mistake": "COUNT(*) on the LEFT JOIN counts the NULL row, so the 42 films with no inventory are counted as having one copy.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "REVIEW",
+   "wrong_rules": [
+    "TSQ105:medium",
+    "TSQ106:medium"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "COUNT(*) counts 4,623 joined rows, which is more than the rows of any single table (film: 1,000, inventory: 4,581); the joins create combinations (many-to-many).",
+    "COUNT(*) counts the row kept for groups with no match, so 'zero' shows as 1."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B21",
+   "db": "sakila",
+   "q": "What was the total amount of payments received in July 2005?",
+   "mistake": "payment_date is a timestamp, so BETWEEN ... '2005-07-31' drops every payment made during July 31.",
+   "category": "sql-mechanics",
+   "wrong_verdict": "FAIL",
+   "wrong_rules": [
+    "TSQ108:high"
+   ],
+   "caught": true,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [
+    "payment.payment_date includes a time of day, so `<= '2005-07-31'` (or BETWEEN \u2026 AND '2005-07-31') stops at midnight and drops 679 rows later on 2005-07-31."
+   ],
+   "genuine_catch": true
+  },
+  {
+   "id": "B22",
+   "db": "sakila",
+   "q": "What is the total payment revenue from rentals of inventory held at store 2?",
+   "mistake": "Attributes payments to the store of the staff member who took the payment, not the store that owns the rented inventory.",
+   "category": "business-meaning",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "B23",
+   "db": "sakila",
+   "q": "Which 3 film categories had the most rentals?",
+   "mistake": "Counts the films in each category (catalog size) instead of the number of rentals.",
+   "category": "business-meaning",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  },
+  {
+   "id": "B24",
+   "db": "sakila",
+   "q": "Who are the top 3 customers by total amount paid?",
+   "mistake": "Ranks customers by number of payments instead of the sum of amounts paid.",
+   "category": "business-meaning",
+   "wrong_verdict": "PASS",
+   "wrong_rules": [],
+   "caught": false,
+   "right_verdict": "PASS",
+   "right_rules": [],
+   "right_false_alarm": false,
+   "wrong_detail": [],
+   "genuine_catch": false
+  }
+ ]
+}

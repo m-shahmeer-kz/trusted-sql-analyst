@@ -1,0 +1,12 @@
+{
+ "questions": 12,
+ "model": "same model for both agents",
+ "without_skill_correct": 12,
+ "with_skill_correct": 12,
+ "gold": "each answer computed two different ways and both agreed",
+ "note": "Both fresh agents answered all 12 correctly. The skill did not change accuracy on these questions; its measured value is catching mistakes (blind test) and stating assumptions and checks in the answer.",
+ "skill_agent_feedback_fixed_in_1_1_0": [
+  "one output folder shared by several databases",
+  "a live check errored on a correlated subquery"
+ ]
+}
