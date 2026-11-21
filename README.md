@@ -8,7 +8,7 @@ database first, keeps a glossary of what columns and business terms mean, runs *
 checks** for silent mistakes, proves the number with **a second query written a different way**,
 and explains the result in plain English with its assumptions.
 
-**[Get it on Agensi — $9.99](https://www.agensi.io/creators/muhammad-shahmeer)** ·
+**[Get it on Agensi — $9.99](https://www.agensi.io/skills/trusted-sql-analyst-text-to-sql-that-double-checks)** ·
 [Results page](https://m-shahmeer-kz.github.io/trusted-sql-analyst/)
 
 > This repository is the public showcase: results, examples and test data. The skill itself
